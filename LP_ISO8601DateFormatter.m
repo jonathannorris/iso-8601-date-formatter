@@ -8,12 +8,12 @@
 #if TARGET_OS_IPHONE
 #	import <UIKit/UIKit.h>
 #endif
-#import "ISO8601DateFormatter.h"
+#import "LP_ISO8601DateFormatter.h"
 
 #ifndef DEFAULT_TIME_SEPARATOR
 #	define DEFAULT_TIME_SEPARATOR ':'
 #endif
-const unichar ISO8601DefaultTimeSeparatorCharacter = DEFAULT_TIME_SEPARATOR;
+const unichar LP_ISO8601DefaultTimeSeparatorCharacter = DEFAULT_TIME_SEPARATOR;
 
 //Unicode date formats.
 #define ISO_CALENDAR_DATE_FORMAT @"yyyy-MM-dd"
@@ -25,13 +25,13 @@ const unichar ISO8601DefaultTimeSeparatorCharacter = DEFAULT_TIME_SEPARATOR;
 #define ISO_TIMEZONE_OFFSET_FORMAT_NO_SEPARATOR @"%+.2d%.2d"
 #define ISO_TIMEZONE_OFFSET_FORMAT_WITH_SEPARATOR @"%+.2d%C%.2d"
 
-@interface ISO8601DateFormatter ()
+@interface LP_ISO8601DateFormatter ()
 + (void) createGlobalCachesThatDoNotAlreadyExist;
 //Used when a memory warning occurs (if at least one ISO 8601 Date Formatter exists at the time).
 + (void) purgeGlobalCaches;
 @end
 
-@interface ISO8601DateFormatter(UnparsingPrivate)
+@interface LP_ISO8601DateFormatter(UnparsingPrivate)
 
 - (NSString *) replaceColonsInString:(NSString *)timeFormat withTimeSeparator:(unichar)timeSep;
 
@@ -44,14 +44,14 @@ static NSMutableDictionary *timeZonesByOffset;
 
 #if ISO8601_TESTING_PURPOSES_ONLY
 //This method only exists for use by the project's test cases. DO NOT use this in an application.
-extern bool ISO8601DateFormatter_GlobalCachesAreWarm(void);
+extern bool LP_ISO8601DateFormatter_GlobalCachesAreWarm(void);
 
-bool ISO8601DateFormatter_GlobalCachesAreWarm(void) {
+bool LP_ISO8601DateFormatter_GlobalCachesAreWarm(void) {
 	return (timeZonesByOffset != nil) && (timeZonesByOffset.count > 0);
 }
 #endif
 
-@implementation ISO8601DateFormatter
+@implementation LP_ISO8601DateFormatter
 + (void) initialize {
 	[self createGlobalCachesThatDoNotAlreadyExist];
 }
@@ -80,8 +80,8 @@ bool ISO8601DateFormatter_GlobalCachesAreWarm(void) {
 		parsingCalendar = [[self makeCalendarWithDesiredConfiguration] retain];
 		unparsingCalendar = [[self makeCalendarWithDesiredConfiguration] retain];
 
-		format = ISO8601DateFormatCalendar;
-		timeSeparator = ISO8601DefaultTimeSeparatorCharacter;
+		format = LP_ISO8601DateFormatCalendar;
+		timeSeparator = LP_ISO8601DefaultTimeSeparatorCharacter;
 		includeTime = NO;
 		parsesStrictly = NO;
 
@@ -130,11 +130,11 @@ bool ISO8601DateFormatter_GlobalCachesAreWarm(void) {
 
 @synthesize parsesStrictly;
 
-static NSUInteger read_segment(const unichar *str, const unichar **next, NSUInteger *out_num_digits);
-static NSUInteger read_segment_4digits(const unichar *str, const unichar **next, NSUInteger *out_num_digits);
-static NSUInteger read_segment_2digits(const unichar *str, const unichar **next);
-static double read_double(const unichar *str, const unichar **next);
-static BOOL is_leap_year(NSUInteger year);
+static NSUInteger LP_read_segment(const unichar *str, const unichar **next, NSUInteger *out_num_digits);
+static NSUInteger LP_read_segment_4digits(const unichar *str, const unichar **next, NSUInteger *out_num_digits);
+static NSUInteger LP_read_segment_2digits(const unichar *str, const unichar **next);
+static double LP_read_double(const unichar *str, const unichar **next);
+static BOOL LP_is_leap_year(NSUInteger year);
 
 /*Valid ISO 8601 date formats:
  *
@@ -225,7 +225,7 @@ static BOOL is_leap_year(NSUInteger year);
 	BOOL strict = self.parsesStrictly;
 	unichar timeSep = self.timeSeparator;
 
-	if (strict) timeSep = ISO8601DefaultTimeSeparatorCharacter;
+	if (strict) timeSep = LP_ISO8601DefaultTimeSeparatorCharacter;
 	NSAssert(timeSep != '\0', @"Time separator must not be NUL.");
 
 	BOOL isValidDate = ([string length] > 0U);
@@ -264,7 +264,7 @@ static BOOL is_leap_year(NSUInteger year);
 				++ch;
 			}
 
-			segment = read_segment(ch, &ch, &num_digits);
+			segment = LP_read_segment(ch, &ch, &num_digits);
 			switch(num_digits) {
 				case 0:
 					if (*ch == 'W') {
@@ -319,7 +319,7 @@ static BOOL is_leap_year(NSUInteger year);
 								else
 									month_or_week = day = 1U;
 							} else {
-								segment = read_segment(ch, &ch, &num_digits);
+								segment = LP_read_segment(ch, &ch, &num_digits);
 								switch(num_digits) {
 									case 4: //MMDD
 										if (strict)
@@ -337,13 +337,13 @@ static BOOL is_leap_year(NSUInteger year);
 										if (!isdigit(*ch))
 											day = 1U;
 										else
-											day = read_segment(ch, &ch, NULL);
+											day = LP_read_segment(ch, &ch, NULL);
 										break;
 
 									case 3: //DDD
 										day = segment % 1000U;
 										dateSpecification = dateOnly;
-										if (strict && (day > (365U + is_leap_year(year))))
+										if (strict && (day > (365U + LP_is_leap_year(year))))
 											isValidDate = NO;
 										break;
 
@@ -361,7 +361,7 @@ static BOOL is_leap_year(NSUInteger year);
 							if (!isdigit(*ch))
 								day = 1U;
 							else
-								day = read_segment(ch, &ch, NULL);
+								day = LP_read_segment(ch, &ch, NULL);
 
 							break;
 
@@ -408,7 +408,7 @@ static BOOL is_leap_year(NSUInteger year);
 									goto centuryOnly;
 								} else {
 									//Get month and/or date.
-									segment = read_segment_4digits(ch, &ch, &num_digits);
+									segment = LP_read_segment_4digits(ch, &ch, &num_digits);
 									NSLog(@"(%@) parsing month; segment is %lu and ch is %@", string, (unsigned long)segment, [NSString stringWithCString:(const char *)ch encoding:NSUnicodeStringEncoding]);
 									switch(num_digits) {
 										case 4: //YY-MMDD
@@ -425,7 +425,7 @@ static BOOL is_leap_year(NSUInteger year);
 											month_or_week = segment;
 											if (*ch == '-') {
 												if (isdigit(*++ch))
-													day = read_segment_2digits(ch, &ch);
+													day = LP_read_segment_2digits(ch, &ch);
 												else
 													day = 1U;
 											} else
@@ -451,10 +451,10 @@ static BOOL is_leap_year(NSUInteger year);
 									else
 										month_or_week = day = 1U;
 								} else {
-									month_or_week = read_segment_2digits(ch, &ch);
+									month_or_week = LP_read_segment_2digits(ch, &ch);
 									if (*ch == '-') ++ch;
 								parseDayAfterWeek:
-									day = isdigit(*ch) ? read_segment_2digits(ch, &ch) : 1U;
+									day = isdigit(*ch) ? LP_read_segment_2digits(ch, &ch) : 1U;
 									dateSpecification = week;
 								}
 							} else {
@@ -475,7 +475,7 @@ static BOOL is_leap_year(NSUInteger year);
 
 							if (*ch == '-') {
 								++ch;
-								month_or_week = read_segment_2digits(ch, &ch);
+								month_or_week = LP_read_segment_2digits(ch, &ch);
 								NSLog(@"(%@) month is %lu", string, (unsigned long)month_or_week);
 							}
 
@@ -487,7 +487,7 @@ static BOOL is_leap_year(NSUInteger year);
 							month_or_week = segment;
 							if (*ch == '-') {
 								++ch;
-								day = read_segment_2digits(ch, &ch);
+								day = LP_read_segment_2digits(ch, &ch);
 							}
 							break;
 
@@ -509,7 +509,7 @@ static BOOL is_leap_year(NSUInteger year);
 						day = segment % 1000U;
 						year = segment / 1000U;
 						dateSpecification = dateOnly;
-						if (strict && (day > (365U + is_leap_year(year))))
+						if (strict && (day > (365U + LP_is_leap_year(year))))
 							isValidDate = NO;
 					}
 					break;
@@ -522,7 +522,7 @@ static BOOL is_leap_year(NSUInteger year);
 						day = segment;
 						year = nowComponents.year;
 						dateSpecification = dateOnly;
-						if (strict && (day > (365U + is_leap_year(year))))
+						if (strict && (day > (365U + LP_is_leap_year(year))))
 							isValidDate = NO;
 					}
 					break;
@@ -536,28 +536,28 @@ static BOOL is_leap_year(NSUInteger year);
 			if (isspace(*ch) || (*ch == 'T')) ++ch;
 
 			if (isdigit(*ch)) {
-				hour = read_segment_2digits(ch, &ch);
+				hour = LP_read_segment_2digits(ch, &ch);
 				if (*ch == timeSep) {
 					++ch;
 					if ((timeSep == ',') || (timeSep == '.')) {
 						//We can't do fractional minutes when '.' is the segment separator.
 						//Only allow whole minutes and whole seconds.
-						minute = read_segment_2digits(ch, &ch);
+						minute = LP_read_segment_2digits(ch, &ch);
 						if (*ch == timeSep) {
 							++ch;
-							second = read_segment_2digits(ch, &ch);
+							second = LP_read_segment_2digits(ch, &ch);
 						}
 					} else {
 						//Allow a fractional minute.
 						//If we don't get a fraction, look for a seconds segment.
 						//Otherwise, the fraction of a minute is the seconds.
-						minute = read_double(ch, &ch);
+						minute = LP_read_double(ch, &ch);
 						second = modf(minute, &minute);
 						if (second > DBL_EPSILON)
 							second *= 60.0; //Convert fraction (e.g. .5) into seconds (e.g. 30).
 						else if (*ch == timeSep) {
 							++ch;
-							second = read_double(ch, &ch);
+							second = LP_read_double(ch, &ch);
 						}
 					}
 				}
@@ -728,14 +728,14 @@ static BOOL is_leap_year(NSUInteger year);
 
 - (NSString *) stringFromDate:(NSDate *)date timeZone:(NSTimeZone *)timeZone {
 	switch (self.format) {
-		case ISO8601DateFormatCalendar:
+		case LP_ISO8601DateFormatCalendar:
 			return [self stringFromDate:date formatString:ISO_CALENDAR_DATE_FORMAT timeZone:timeZone];
-		case ISO8601DateFormatWeek:
+		case LP_ISO8601DateFormatWeek:
 			return [self weekDateStringForDate:date timeZone:timeZone];
-		case ISO8601DateFormatOrdinal:
+		case LP_ISO8601DateFormatOrdinal:
 			return [self stringFromDate:date formatString:ISO_ORDINAL_DATE_FORMAT timeZone:timeZone];
 		default:
-			[NSException raise:NSInternalInconsistencyException format:@"self.format was %tu, not calendar (%tu), week (%tu), or ordinal (%tu)", self.format, ISO8601DateFormatCalendar, ISO8601DateFormatWeek, ISO8601DateFormatOrdinal];
+			[NSException raise:NSInternalInconsistencyException format:@"self.format was %tu, not calendar (%tu), week (%tu), or ordinal (%tu)", self.format, LP_ISO8601DateFormatCalendar, LP_ISO8601DateFormatWeek, LP_ISO8601DateFormatOrdinal];
 			return nil;
 	}
 }
@@ -829,8 +829,8 @@ static BOOL is_leap_year(NSUInteger year);
 
 	NSInteger prevYear = year - 1;
 
-	BOOL yearIsLeapYear = is_leap_year(year);
-	BOOL prevYearIsLeapYear = is_leap_year(prevYear);
+	BOOL yearIsLeapYear = LP_is_leap_year(year);
+	BOOL prevYearIsLeapYear = LP_is_leap_year(prevYear);
 
 	NSInteger YY = prevYear % 100;
 	NSInteger C = prevYear - YY;
@@ -859,7 +859,7 @@ static BOOL is_leap_year(NSUInteger year);
 	if(includeTime) {
 		NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
 		unichar timeSep = self.timeSeparator;
-		if (!timeSep) timeSep = ISO8601DefaultTimeSeparatorCharacter;
+		if (!timeSep) timeSep = LP_ISO8601DefaultTimeSeparatorCharacter;
 		formatter.dateFormat = [self replaceColonsInString:ISO_TIME_FORMAT withTimeSeparator:timeSep];
 		formatter.locale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
 		formatter.timeZone = timeZone;
@@ -893,7 +893,7 @@ static BOOL is_leap_year(NSUInteger year);
 
 @end
 
-static NSUInteger read_segment(const unichar *str, const unichar **next, NSUInteger *out_num_digits) {
+static NSUInteger LP_read_segment(const unichar *str, const unichar **next, NSUInteger *out_num_digits) {
 	NSUInteger num_digits = 0U;
 	NSUInteger value = 0U;
 
@@ -909,7 +909,7 @@ static NSUInteger read_segment(const unichar *str, const unichar **next, NSUInte
 
 	return value;
 }
-static NSUInteger read_segment_4digits(const unichar *str, const unichar **next, NSUInteger *out_num_digits) {
+static NSUInteger LP_read_segment_4digits(const unichar *str, const unichar **next, NSUInteger *out_num_digits) {
 	NSUInteger num_digits = 0U;
 	NSUInteger value = 0U;
 
@@ -941,7 +941,7 @@ static NSUInteger read_segment_4digits(const unichar *str, const unichar **next,
 
 	return value;
 }
-static NSUInteger read_segment_2digits(const unichar *str, const unichar **next) {
+static NSUInteger LP_read_segment_2digits(const unichar *str, const unichar **next) {
 	NSUInteger value = 0U;
 
 	if (isdigit(*str))
@@ -958,7 +958,7 @@ static NSUInteger read_segment_2digits(const unichar *str, const unichar **next)
 }
 
 //strtod doesn't support ',' as a separator. This does.
-static double read_double(const unichar *str, const unichar **next) {
+static double LP_read_double(const unichar *str, const unichar **next) {
 	double value = 0.0;
 
 	if (str) {
@@ -988,7 +988,7 @@ static double read_double(const unichar *str, const unichar **next) {
 	return value;
 }
 
-static BOOL is_leap_year(NSUInteger year) {
+static BOOL LP_is_leap_year(NSUInteger year) {
 	return \
 	    ((year %   4U) == 0U)
 	&& (((year % 100U) != 0U)
