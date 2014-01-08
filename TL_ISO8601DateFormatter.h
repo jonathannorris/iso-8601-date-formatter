@@ -7,17 +7,17 @@
 #import <Foundation/Foundation.h>
 
 ///Which of ISO 8601's three date formats the formatter should produce.
-typedef NS_ENUM(NSUInteger, LP_ISO8601DateFormat) {
+typedef NS_ENUM(NSUInteger, TL_ISO8601DateFormat) {
 	///YYYY-MM-DD.
-	LP_ISO8601DateFormatCalendar,
+	TL_ISO8601DateFormatCalendar,
 	///YYYY-DDD, where DDD ranges from 1 to 366; for example, 2009-32 is 2009-02-01.
-	LP_ISO8601DateFormatOrdinal,
+	TL_ISO8601DateFormatOrdinal,
 	///YYYY-Www-D, where ww ranges from 1 to 53 (the 'W' is literal) and D ranges from 1 to 7; for example, 2009-W05-07.
-	LP_ISO8601DateFormatWeek,
+	TL_ISO8601DateFormatWeek,
 };
 
 ///The default separator for time values. Currently, this is ':'.
-extern const unichar LP_ISO8601DefaultTimeSeparatorCharacter;
+extern const unichar TL_ISO8601DefaultTimeSeparatorCharacter;
 
 /*!
  *	@brief	This class converts dates to and from ISO 8601 strings.
@@ -37,7 +37,7 @@ extern const unichar LP_ISO8601DefaultTimeSeparatorCharacter;
  * For a good and more detailed introduction to ISO 8601, see [“A summary of the international standard date and time notation” by Markus Kuhn](http://www.cl.cam.ac.uk/~mgk25/iso-time.html). The actual standard itself can be found in PDF format online with a well-crafted web search.
  */
 
-@interface LP_ISO8601DateFormatter: NSFormatter
+@interface TL_ISO8601DateFormatter: NSFormatter
 {
 	NSString *lastUsedFormatString;
 	NSDateFormatter *unparsingFormatter;
@@ -45,7 +45,7 @@ extern const unichar LP_ISO8601DefaultTimeSeparatorCharacter;
 	NSCalendar *parsingCalendar, *unparsingCalendar;
     
 	NSTimeZone *defaultTimeZone;
-	LP_ISO8601DateFormat format;
+	TL_ISO8601DateFormat format;
 	unichar timeSeparator;
     unichar timeZoneSeparator;
 	BOOL includeTime;
@@ -159,7 +159,7 @@ extern const unichar LP_ISO8601DefaultTimeSeparatorCharacter;
  *
  *	@details	See ISO8601DateFormat for possible values.
  */
-@property LP_ISO8601DateFormat format;
+@property TL_ISO8601DateFormat format;
 /*!
  *	@brief	Whether strings should include time of day.
  *
@@ -174,7 +174,7 @@ extern const unichar LP_ISO8601DefaultTimeSeparatorCharacter;
  *
  *	@details	This is used in both parsing and unparsing.
  *
- * The default value is LP_ISO8601DefaultTimeSeparatorCharacter.
+ * The default value is TL_ISO8601DefaultTimeSeparatorCharacter.
  *
  * When parsesStrictly is set to `YES`, this property is ignored. Otherwise, the parser will raise an exception if this is set to zero.
  *
